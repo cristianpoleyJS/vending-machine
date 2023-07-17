@@ -11,14 +11,13 @@ class ProductSerializer(serializers.Serializer):
 class VendingMachineSlotSerializer(serializers.Serializer):
     id = serializers.UUIDField()
     quantity = serializers.IntegerField()
-    coordinates = serializers.SerializerMethodField()
+    row = serializers.IntegerField()
+    column = serializers.IntegerField()
     product = ProductSerializer()
-
-    def get_coordinates(self, instance) -> list[int, int]:
-        return [instance.column, instance.row]
 
 
 class UserSerializer(serializers.Serializer):
     id = serializers.UUIDField()
     name = serializers.CharField()
-    balance = serializers.DecimalField(max_digits=4, decimal_places=2)
+    balance = serializers.DecimalField(
+        max_digits=4, decimal_places=2, default=0.00)

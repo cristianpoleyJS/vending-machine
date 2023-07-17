@@ -3,7 +3,8 @@ from apps.vending.models import Product, User, VendingMachineSlot
 
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ["name", "price", "description", "created_at", "updated_at"]
+    list_display = ["name", "price", "description",
+                    "created_at", "updated_at", "id"]
     ordering = ["-created_at"]
 
 
@@ -13,7 +14,7 @@ class VendingMachineSlotAdmin(admin.ModelAdmin):
 
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ["name", "balance", "created_at"]
+    list_display = ["name", "balance", "created_at", "id"]
     ordering = ["-created_at"]
 
 

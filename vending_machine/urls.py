@@ -22,10 +22,14 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("healthcheck/", healthcheck),
-    path("slots/", include([
-        # path("<uuid:id>", vending_views.VendingMachineSlotDetailView.as_view()),
-        path("", vending_views.VendingMachineSlotView.as_view()),
-    ])),
+    # path("slots/", include([
+    #     path("<uuid:id>", vending_views.VendingMachineSlotDetailView.as_view()),
+    #     path("", vending_views.VendingMachineSlotView.as_view()),
+    # ])),
+    path("login/", vending_views.LoginView.as_view()),
+    path("products/", vending_views.ProductView.as_view()),
+    path("balance/", vending_views.BalanceView.as_view()),
+    path("order/", vending_views.OrderView.as_view()),
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "docs/",
