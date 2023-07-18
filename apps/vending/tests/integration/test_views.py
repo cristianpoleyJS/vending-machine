@@ -26,6 +26,19 @@ def slots_grid(products_list) -> list[VendingMachineSlot]:
     return slots
 
 
+@pytest.fixture
+def products_grid(products_list) -> list[Product]:
+    """returns a grid of product of 2x2"""
+    result = []
+    for row in range(1, 2):
+        for column in range(1, 2):
+            product = ProductFactory(
+                product=products_list.pop(), row=row, column=column, quantity=column-1
+            )
+            result.append(product)
+    return result
+
+
 @pytest.mark.django_db
 class TestListVendingMachineSlots:
 
@@ -36,61 +49,71 @@ class TestListVendingMachineSlots:
             {
                 "id": ANY,
                 "quantity": 0,
-                "coordinates": [1, 1],
+                "row": 1,
+                "column": 1,
                 "product": {"id": ANY, "name": "Product 10", "description": ANY, "price": "10.40"},
             },
             {
                 "id": ANY,
                 "quantity": 1,
-                "coordinates": [2, 1],
+                "row": 1,
+                "column": 2,
                 "product": {"id": ANY, "name": "Product 9", "description": ANY, "price": "10.40"},
             },
             {
                 "id": ANY,
                 "quantity": 2,
-                "coordinates": [3, 1],
+                "row": 1,
+                "column": 3,
                 "product": {"id": ANY, "name": "Product 8", "description": ANY, "price": "10.40"},
             },
             {
                 "id": ANY,
                 "quantity": 3,
-                "coordinates": [4, 1],
+                "row": 1,
+                "column": 4,
                 "product": {"id": ANY, "name": "Product 7", "description": ANY, "price": "10.40"},
             },
             {
                 "id": ANY,
                 "quantity": 4,
-                "coordinates": [5, 1],
+                "row": 1,
+                "column": 5,
                 "product": {"id": ANY, "name": "Product 6", "description": ANY, "price": "10.40"},
             },
             {
                 "id": ANY,
                 "quantity": 0,
-                "coordinates": [1, 2],
+                "row": 2,
+                "column": 1,
                 "product": {"id": ANY, "name": "Product 5", "description": ANY, "price": "10.40"},
             },
             {
                 "id": ANY,
                 "quantity": 1,
-                "coordinates": [2, 2],
+                "row": 2,
+                "column": 2,
                 "product": {"id": ANY, "name": "Product 4", "description": ANY, "price": "10.40"},
             },
             {
                 "id": ANY,
                 "quantity": 2,
-                "coordinates": [3, 2],
+                "row": 2,
+                "column": 3,
                 "product": {"id": ANY, "name": "Product 3", "description": ANY, "price": "10.40"},
             },
             {
                 "id": ANY,
                 "quantity": 3,
-                "coordinates": [4, 2],
+                "row": 2,
+                "column": 4,
                 "product": {"id": ANY, "name": "Product 2", "description": ANY, "price": "10.40"},
             },
             {
                 "id": ANY,
                 "quantity": 4,
-                "coordinates": [5, 2],
+                "row": 2,
+                "column": 5,
                 "product": {"id": ANY, "name": "Product 1", "description": ANY, "price": "10.40"},
             },
         ]
@@ -111,27 +134,128 @@ class TestListVendingMachineSlots:
             {
                 "id": ANY,
                 "quantity": 0,
-                "coordinates": [1, 1],
+                "row": 1,
+                "column": 1,
                 "product": {"id": ANY, "name": "Product 10", "description": ANY, "price": "10.40"},
             },
             {
                 "id": ANY,
                 "quantity": 1,
-                "coordinates": [2, 1],
+                "row": 1,
+                "column": 2,
                 "product": {"id": ANY, "name": "Product 9", "description": ANY, "price": "10.40"},
             },
             {
                 "id": ANY,
                 "quantity": 0,
-                "coordinates": [1, 2],
+                "row": 2,
+                "column": 1,
                 "product": {"id": ANY, "name": "Product 5", "description": ANY, "price": "10.40"},
             },
             {
                 "id": ANY,
+                "row": 2,
+                "column": 2,
                 "quantity": 1,
-                "coordinates": [2, 2],
                 "product": {"id": ANY, "name": "Product 4", "description": ANY, "price": "10.40"},
             },
+        ]
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == expected_response
+
+
+@pytest.mark.django_db
+class TestListProducts:
+
+    def test_list_products_returns_expected_response(self, client, slots_grid):
+        response = client.get("/products/")
+
+        expected_response = [
+            [
+                {
+                    'id': ANY,
+                    'name': 'Product 10',
+                    'description': 'Delicious chocolate bar with peanuts',
+                    'price': '10.40',
+                    'quantity': 0,
+                    'slot_id': ANY
+                },
+                {
+                    'id': ANY,
+                    'name': 'Product 9',
+                    'description': 'Delicious chocolate bar with peanuts',
+                    'price': '10.40',
+                    'quantity': 1,
+                    'slot_id': ANY
+                },
+                {
+                    'id': ANY,
+                    'name': 'Product 8',
+                    'description': 'Delicious chocolate bar with peanuts',
+                    'price': '10.40',
+                    'quantity': 2,
+                    'slot_id': ANY
+                },
+                {
+                    'id': ANY,
+                    'name': 'Product 7',
+                    'description': 'Delicious chocolate bar with peanuts',
+                    'price': '10.40',
+                    'quantity': 3,
+                    'slot_id': ANY
+                },
+                {
+                    'id': ANY,
+                    'name': 'Product 6',
+                    'description': 'Delicious chocolate bar with peanuts',
+                    'price': '10.40',
+                    'quantity': 4,
+                    'slot_id': ANY
+                }
+            ],
+            [
+                {
+                    'id': ANY,
+                    'name': 'Product 5',
+                    'description': 'Delicious chocolate bar with peanuts',
+                    'price': '10.40',
+                    'quantity': 0,
+                    'slot_id': ANY
+                },
+                {
+                    'id': ANY,
+                    'name': 'Product 4',
+                    'description': 'Delicious chocolate bar with peanuts',
+                    'price': '10.40',
+                    'quantity': 1,
+                    'slot_id': ANY
+                },
+                {
+                    'id': ANY,
+                    'name': 'Product 3',
+                    'description': 'Delicious chocolate bar with peanuts',
+                    'price': '10.40',
+                    'quantity': 2,
+                    'slot_id': ANY
+                },
+                {
+                    'id': ANY,
+                    'name': 'Product 2',
+                    'description': 'Delicious chocolate bar with peanuts',
+                    'price': '10.40',
+                    'quantity': 3,
+                    'slot_id': ANY
+                },
+                {
+                    'id': ANY,
+                    'name': 'Product 1',
+                    'description': 'Delicious chocolate bar with peanuts',
+                    'price': '10.40',
+                    'quantity': 4,
+                    'slot_id': ANY
+                }
+            ]
         ]
 
         assert response.status_code == status.HTTP_200_OK
