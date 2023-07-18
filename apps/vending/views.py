@@ -1,3 +1,4 @@
+from decimal import Decimal
 from uuid import UUID
 
 from rest_framework.response import Response
@@ -5,10 +6,12 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework import serializers
+from apps.vending.exceptions import OrderError, UserNotFound, VendingMachineSlotNotFound
 
-from apps.vending.models import VendingMachineSlot, Product, User
-from apps.vending.serializers import VendingMachineSlotSerializer, ProductSerializer, UserSerializer
-from apps.vending.validators import ListSlotsValidator
+from apps.vending.models import VendingMachineSlot, User
+from apps.vending.serializers import VendingMachineSlotSerializer, UserSerializer
+from apps.vending.services import BalanceOperatorService, OrderOperatorService
+from apps.vending.validators import ListSlotsValidator, LoginValidator, OrderViewValidator, BalanceViewValidator
 
 from drf_spectacular.utils import extend_schema, inline_serializer
 
@@ -45,31 +48,37 @@ class LoginView(APIView):
             },
         ),
     )
-    def post(self, request):
+    def post(self, request: Request) -> Response:
+        validator = LoginValidator(data=request.data)
+        validator.is_valid(raise_exception=True)
+        name = validator.validated_data["name"].lower()
         try:
-            name = request.data["name"].lower()
             user = User.objects.get(name=name)
             user_serializer = UserSerializer(user)
             return Response(data=user_serializer.data)
         except User.DoesNotExist:
-            new_user = User.objects.update_or_create(name=name, balance=0.00)
-            return Response(data=new_user)
+            new_user = User.objects.create(name=name, balance=0.00)
+            user_serializer = UserSerializer(new_user)
+            return Response(data=user_serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ProductView(APIView):
 
-    def get(self, request) -> Response:
+    def get(self, request: Request) -> Response:
         slots = VendingMachineSlot.objects.order_by("row", "column")
         slots_serializer = VendingMachineSlotSerializer(
             slots, many=True)
         result = []
         for slot in slots_serializer.data:
-            product = Product.objects.get(id=slot["product"]["id"])
-            product_serializer = ProductSerializer(product)
+            new_product = {
+                **slot["product"],
+                "quantity": slot["quantity"],
+                "slot_id": slot["id"]
+            }
             if len(result) < slot["row"]:
-                result.append([product_serializer.data])
+                result.append([new_product])
             else:
-                result[slot["row"] - 1].append(product_serializer.data)
+                result[slot["row"] - 1].append(new_product)
         return Response(data=result)
 
 
@@ -88,27 +97,16 @@ class BalanceView(APIView):
         ),
     )
     def post(self, request) -> Response:
+        validator = BalanceViewValidator(data=request.data)
+        validator.is_valid(raise_exception=True)
+        dto = validator.to_dto()
+        service = BalanceOperatorService()
         try:
-            user = User.objects.get(id=request.data["user_id"])
-            if request.data["type_operation"] == "refund":
-                new_user = User.objects.update_or_create(
-                    id=user.id,
-                    defaults={
-                        "name": user.name,
-                        "balance": user.balance - int(request.data["amount"])
-                    }
-                )
-                return Response(data=new_user)
-            new_user = User.objects.update_or_create(
-                id=user.id,
-                defaults={
-                    "name": user.name,
-                    "balance": user.balance + int(request.data["amount"])
-                }
-            )
-            return Response(data=new_user)
-        except User.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            user = service.execute(dto)
+        except UserNotFound as e:
+            return Response(status=status.HTTP_404_NOT_FOUND, data={"message": str(e)},)
+        user_serializer = UserSerializer(user)
+        return Response(data=user_serializer.data)
 
 
 class OrderView(APIView):
@@ -118,34 +116,22 @@ class OrderView(APIView):
             name="OrderViewInSerializer",
             fields={
                 "user_id": serializers.UUIDField(),
-                "product_id": serializers.UUIDField(),
+                "slot_id": serializers.UUIDField(),
             },
         ),
     )
     def post(self, request) -> Response:
+        validator = OrderViewValidator(data=request.data)
+        validator.is_valid(raise_exception=True)
+        dto = validator.to_dto()
+        service = OrderOperatorService()
         try:
-            user = User.objects.get(id=request.data["user_id"])
-            product = Product.objects.get(id=request.data["product_id"])
-            new_user = User.objects.update(
-                id=user.id,
-                defaults={
-                    "name": user.name,
-                    "balance": user.balance - int(product["price"])
-                }
-            )
-            Product.objects.update(
-                id=product.id,
-                defaults={
-                    "name": product.name,
-                    "description": product.description,
-                    "price": product.price,
-                    "quantity": product.quantity - 1
-                }
-            )
-            return Response(data={
-                "balance": new_user.balance,
-            })
-        except User.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        except Product.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            user = service.execute(dto)
+        except UserNotFound as e:
+            return Response(status=status.HTTP_404_NOT_FOUND, data={"message": str(e)})
+        except VendingMachineSlotNotFound as e:
+            return Response(status=status.HTTP_404_NOT_FOUND, data={"message": str(e)})
+        except OrderError as e:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={"message": str(e)})
+        user_serializer = UserSerializer(user)
+        return Response(data=user_serializer.data)
