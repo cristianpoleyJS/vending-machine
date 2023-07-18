@@ -1,7 +1,7 @@
 from decimal import Decimal
 from apps.vending.exceptions import OrderError, UserNotFound, VendingMachineSlotNotFound
 from apps.vending.models import User, VendingMachineSlot
-from apps.vending.validators import BalanceOperationDto, BalanceTypeOperation, OrderOperationDto
+from apps.vending.validators import BalanceOperationDto, BalanceTypeOperation, BalanceViewValidator, OrderOperationDto
 
 
 class BalanceOperatorService:
@@ -16,6 +16,8 @@ class BalanceOperatorService:
             raise ValueError("Amount cannot be a negative number")
         if dto.type_operation == BalanceTypeOperation.REFUND:
             user.balance = Decimal("0.00")
+        elif dto.type_operation == BalanceTypeOperation.ORDER_PRODUCT:
+            user.balance -= dto.amount
         else:
             user.balance += dto.amount
         user.save()
@@ -40,8 +42,13 @@ class OrderOperatorService:
         if slot.quantity == 0:
             raise OrderError("Not enough product quantity")
 
+        balance_service = BalanceOperatorService()
+        dto = BalanceOperationDto(
+            user_id=user.id,
+            type_operation=BalanceTypeOperation.ORDER_PRODUCT,
+            amount=slot.product.price
+        )
+        balance_service.execute(dto)
         slot.quantity -= 1
         slot.save()
-        user.balance -= slot.product.price
-        user.save()
         return user

@@ -51,7 +51,7 @@ def test_should_raise_error_if_order_a_slot_with_quantity_zero():
 
 
 @pytest.mark.django_db
-def test_should_decrease_quantity_after_order_product():
+def test_should_decrease_quantity_and_update_user_balance_after_order_product():
     user = UserFactory(balance=Decimal("10.00"))
     slot = VendingMachineSlotFactory(
         product__price=Decimal("2.00"), quantity=5)
