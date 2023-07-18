@@ -11,6 +11,10 @@ class BalanceOperationDto:
     type_operation: BalanceTypeOperation
     amount: Decimal | None
 
+    def __post_init__(self):  # it will be executed after the object is created
+        if self.amount < Decimal("0.00"):
+            raise ValueError("Amount cannot be a negative number")
+
 
 @dataclass
 class OrderOperationDto:
