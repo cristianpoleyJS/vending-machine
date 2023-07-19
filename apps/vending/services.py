@@ -49,7 +49,7 @@ class OrderOperatorService:
             type_operation=BalanceTypeOperation.ORDER_PRODUCT,
             amount=slot.product.price
         )
-        balance_service.execute(dto)
+        user = balance_service.execute(dto)
         slot.quantity -= 1
         slot.save()
         return user
