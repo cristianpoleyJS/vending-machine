@@ -17,7 +17,7 @@ class LoginValidator(serializers.Serializer):
 class BalanceViewValidator(serializers.Serializer):
     user_id = serializers.UUIDField(required=True)
     type_operation = serializers.ChoiceField(
-        choices=[BalanceTypeOperation.ADD.value, BalanceTypeOperation.REFUND.value])
+        choices=[BalanceTypeOperation.ADD.value, BalanceTypeOperation.REFUND.value, BalanceTypeOperation.ORDER_PRODUCT.value])
     amount = serializers.DecimalField(
         required=False, max_digits=4, decimal_places=2)
 

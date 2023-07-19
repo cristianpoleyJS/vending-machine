@@ -6,6 +6,7 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework import serializers
+from apps.vending.enums import BalanceTypeOperation
 from apps.vending.exceptions import OrderError, UserNotFound, VendingMachineSlotNotFound
 
 from apps.vending.models import VendingMachineSlot, User
@@ -86,7 +87,7 @@ class BalanceView(APIView):
             fields={
                 "user_id": serializers.UUIDField(),
                 "type_operation": serializers.ChoiceField(
-                    choices=["add", "refund"]),
+                    choices=[BalanceTypeOperation.ADD, BalanceTypeOperation.REFUND, BalanceTypeOperation.ORDER_PRODUCT]),
                 "amount": serializers.DecimalField(
                     max_digits=4, decimal_places=2, default=0.00)
             },

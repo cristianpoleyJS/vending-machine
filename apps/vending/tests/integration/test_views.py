@@ -3,6 +3,7 @@ from unittest.mock import ANY
 
 import pytest
 from rest_framework import status
+from apps.vending.enums import BalanceTypeOperation
 
 from apps.vending.models import Product, User, VendingMachineSlot
 from apps.vending.tests.factories import ProductFactory, VendingMachineSlotFactory
@@ -291,3 +292,74 @@ class TestListProducts:
 
         assert response.status_code == status.HTTP_200_OK
         assert response.json() == expected_response
+
+
+@pytest.mark.django_db
+class TestOrderProduct:
+
+    def test_order_product_returns_expected_response(self, client, slots_grid):
+        response_login = client.post("/login/", {
+            "name": "Juan Praderas"
+        })
+        User.objects.update(id=response_login.json()[
+                            "id"], balance=Decimal("21.40"))
+
+        response = client.post("/order/", {
+            "user_id": response_login.json()["id"],
+            "slot_id": VendingMachineSlot.objects.all().first().id
+        })
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["balance"] == "11.00"
+
+
+@pytest.mark.django_db
+class TestBalance:
+
+    def test_balance_returns_expected_response_when_add(self, client):
+        response_login = client.post("/login/", {
+            "name": "Juan Praderas"
+        })
+        User.objects.update(id=response_login.json()[
+                            "id"], balance=Decimal("5.50"))
+
+        response = client.post("/balance/", {
+            "user_id": response_login.json()["id"],
+            "type_operation": BalanceTypeOperation.ADD.value,
+            "amount": "10.00"
+        })
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["balance"] == "15.50"
+
+    def test_balance_returns_expected_response_when_refund(self, client):
+        response_login = client.post("/login/", {
+            "name": "Juan Praderas"
+        })
+        User.objects.update(id=response_login.json()[
+                            "id"], balance=Decimal("5.50"))
+
+        response = client.post("/balance/", {
+            "user_id": response_login.json()["id"],
+            "type_operation": BalanceTypeOperation.REFUND.value,
+            "amount": "10.00"
+        })
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["balance"] == "0.00"
+
+    def test_balance_returns_expected_response_when_order_product(self, client):
+        response_login = client.post("/login/", {
+            "name": "Juan Praderas"
+        })
+        User.objects.update(id=response_login.json()[
+                            "id"], balance=Decimal("15.50"))
+
+        response = client.post("/balance/", {
+            "user_id": response_login.json()["id"],
+            "type_operation": BalanceTypeOperation.ORDER_PRODUCT.value,
+            "amount": "10.00"
+        })
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["balance"] == "5.50"
