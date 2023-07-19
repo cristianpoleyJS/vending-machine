@@ -3,3 +3,4 @@ pytest-django==4.5.1
 factory-boy==3.2.1
 djangorestframework==3.14.0
 drf-spectacular==0.26.3
+django-cors-headers==4.2.0
