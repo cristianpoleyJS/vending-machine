@@ -14,4 +14,4 @@ The project should prioritize error handling, validation mechanisms and authoriz
 
 ## Solution - Swagger
 
-<img src="./.github/swagger.png/>
+<img src="./.github/swagger.png">
