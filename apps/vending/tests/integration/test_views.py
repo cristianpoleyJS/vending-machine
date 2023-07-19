@@ -4,7 +4,7 @@ from unittest.mock import ANY
 import pytest
 from rest_framework import status
 
-from apps.vending.models import Product, VendingMachineSlot
+from apps.vending.models import Product, User, VendingMachineSlot
 from apps.vending.tests.factories import ProductFactory, VendingMachineSlotFactory
 
 
@@ -37,6 +37,37 @@ def products_grid(products_list) -> list[Product]:
             )
             result.append(product)
     return result
+
+
+@pytest.mark.django_db
+class TestLogin:
+
+    def test_login_returns_expected_response_when_user_not_exist(self, client):
+        response = client.post("/login/", {
+            "name": "Juan Praderas"
+        })
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()["name"] == "Juan Praderas"
+
+    def test_login_returns_expected_response_when_user_exist(self, client):
+        response = client.post("/login/", {
+            "name": "Juan Praderas"
+        })
+
+        assert response.status_code == status.HTTP_201_CREATED
+
+        user = User.objects.get(id=response.json()["id"])
+        user.balance = Decimal("10.40")
+        user.save()
+
+        new_response = client.post("/login/", {
+            "name": user.name
+        })
+
+        assert new_response.status_code == status.HTTP_200_OK
+        assert new_response.json()["name"] == "Juan Praderas"
+        assert new_response.json()["balance"] == '10.40'
 
 
 @pytest.mark.django_db

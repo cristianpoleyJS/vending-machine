@@ -81,13 +81,19 @@ class TestVendingMachineSlotModel:
             (None, 1, 1, IntegrityError),
             (10, None, 1, IntegrityError),
             (10, 1, None, IntegrityError),
+            (1, 5, 6, ValidationError),
+            (10, 15, 4, ValidationError),
+            (101, 5, 6, ValidationError)
         ],
-        ids=["without_quantity", "without_row", "without_column",]
+        ids=["without_quantity", "without_row",
+             "without_column", "column_higher_than_5",
+             "row_higher_than_10", "quantity_higher_than_100"]
     )
     def test_vending_machine_slot_creation_fail(self, quantity, row, column, expected_error, product_fixture):
         with pytest.raises(expected_error):
-            VendingMachineSlotFactory(
+            slot = VendingMachineSlotFactory(
                 product=product_fixture, quantity=quantity, row=row, column=column)
+            slot.full_clean()
 
 
 @pytest.mark.django_db
