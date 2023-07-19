@@ -30,6 +30,17 @@ def test_should_raise_error_if_increase_a_negative_number():
 
 
 @pytest.mark.django_db
+def test_should_reset_balance_if_user_refund():
+    user = UserFactory(balance=Decimal("10.00"))
+    dto = BalanceOperationDto(
+        user_id=user.id, type_operation=BalanceTypeOperation.REFUND)
+    service = BalanceOperatorService()
+    service.execute(dto)
+    user.refresh_from_db()
+    assert user.balance == Decimal("0.00")
+
+
+@pytest.mark.django_db
 def test_should_raise_error_if_order_product_with_price_higher_than_balance():
     user = UserFactory(balance=Decimal("1.00"))
     slot = VendingMachineSlotFactory(product__price=Decimal("2.00"))

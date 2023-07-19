@@ -9,11 +9,7 @@ from apps.vending.enums import BalanceTypeOperation
 class BalanceOperationDto:
     user_id: UUID
     type_operation: BalanceTypeOperation
-    amount: Decimal | None
-
-    def __post_init__(self):  # it will be executed after the object is created
-        if self.amount < Decimal("0.00"):
-            raise ValueError("Amount cannot be a negative number")
+    amount: Decimal | None = None
 
 
 @dataclass

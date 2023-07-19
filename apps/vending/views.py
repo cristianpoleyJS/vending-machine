@@ -52,14 +52,10 @@ class LoginView(APIView):
         validator = LoginValidator(data=request.data)
         validator.is_valid(raise_exception=True)
         name = validator.validated_data["name"]
-        try:
-            user = User.objects.get(name__iexact=name)
-            user_serializer = UserSerializer(user)
-            return Response(data=user_serializer.data)
-        except User.DoesNotExist:
-            new_user = User.objects.create(name=name, balance=0.00)
-            user_serializer = UserSerializer(new_user)
-            return Response(data=user_serializer.data, status=status.HTTP_201_CREATED)
+        user, created = User.objects.get_or_create(
+            name__iexact=name, defaults={"name": name})
+        user_serializer = UserSerializer(user)
+        return Response(data=user_serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
 
 class ProductView(APIView):

@@ -12,14 +12,15 @@ class BalanceOperatorService:
         except User.DoesNotExist:
             raise UserNotFound(f"User not found with ID {dto.user_id}")
 
-        if dto.amount < Decimal("0.00"):
-            raise ValueError("Amount cannot be a negative number")
         if dto.type_operation == BalanceTypeOperation.REFUND:
             user.balance = Decimal("0.00")
-        elif dto.type_operation == BalanceTypeOperation.ORDER_PRODUCT:
-            user.balance -= dto.amount
         else:
-            user.balance += dto.amount
+            if dto.amount < Decimal("0.00"):
+                raise ValueError("Amount cannot be a negative number")
+            if dto.type_operation == BalanceTypeOperation.ORDER_PRODUCT:
+                user.balance -= dto.amount
+            else:
+                user.balance += dto.amount
         user.save()
         return user
 
