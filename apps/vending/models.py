@@ -12,7 +12,7 @@ class Product(models.Model):
         return self.name
 
     id = models.UUIDField(
-        primary_key=True, default=uuid.uuid4(), editable=False)
+        primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=1000, null=True)
     price = models.DecimalField(max_digits=4, decimal_places=2, validators=[
@@ -26,7 +26,7 @@ class VendingMachineSlot(models.Model):
         db_table = "vending_machine_slot"
 
     id = models.UUIDField(
-        primary_key=True, default=uuid.uuid4(), editable=False)
+        primary_key=True, default=uuid.uuid4, editable=False)
     product = models.ForeignKey("Product", on_delete=models.CASCADE)
     quantity = models.IntegerField(
         validators=[MaxValueValidator(100), MinValueValidator(0)])
@@ -44,7 +44,7 @@ class User(models.Model):
         return self.name
 
     id = models.UUIDField(
-        primary_key=True, default=uuid.uuid4(), editable=False)
+        primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=200)
     balance = models.DecimalField(max_digits=4,
                                   decimal_places=2,
