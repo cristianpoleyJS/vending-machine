@@ -51,9 +51,9 @@ class LoginView(APIView):
     def post(self, request: Request) -> Response:
         validator = LoginValidator(data=request.data)
         validator.is_valid(raise_exception=True)
-        name = validator.validated_data["name"].lower()
+        name = validator.validated_data["name"]
         try:
-            user = User.objects.get(name=name)
+            user = User.objects.get(name__iexact=name)
             user_serializer = UserSerializer(user)
             return Response(data=user_serializer.data)
         except User.DoesNotExist:
